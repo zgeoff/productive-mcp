@@ -166,45 +166,30 @@ export const taskRepositionTool = async (
   }
 
   try {
-    const result = await repositionTask(apiClient, params);
-
-    if (result.success) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Task ${params.taskId} repositioned successfully.
-The task has been moved ${params.moveToTop ? 'to the top of the list' :
-                           params.moveToBottom ? 'to the bottom of the list' :
-                           params.move_before_id ? `before task ${params.move_before_id}` :
-                           params.move_after_id ? `after task ${params.move_after_id}` :
-                           'to a new position'}.`,
-        }],
-      };
-    }
-
-    if (result.data) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Task ${result.data.id} repositioned successfully.
-Title: ${result.data.attributes?.title || 'Unknown'}
-Position updated according to the requested parameters.`,
-        }],
-      };
-    }
-
-    return {
-      content: [{
-        type: 'text',
-        text: `Task repositioning operation completed successfully.`,
-      }],
-    };
+    await repositionTask(apiClient, params);
   } catch (error) {
     throw new McpError(
       ErrorCode.InternalError,
       error instanceof Error ? error.message : 'Unknown error occurred'
     );
   }
+
+  const movedTo = params.moveToTop
+    ? 'to the top of the list'
+    : params.moveToBottom
+      ? 'to the bottom of the list'
+      : params.move_before_id
+        ? `before task ${params.move_before_id}`
+        : params.move_after_id
+          ? `after task ${params.move_after_id}`
+          : 'to a new position';
+
+  return {
+    content: [{
+      type: 'text',
+      text: `Task ${params.taskId} repositioned successfully.\nThe task has been moved ${movedTo}.`,
+    }],
+  };
 };
 
 export default {

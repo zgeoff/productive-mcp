@@ -30,7 +30,7 @@ function buildClient(overrides: Partial<Record<keyof ProductiveAPIClient, unknow
     listTasks: async () => ({
       data: [task('t-1', 5, 'tl-1'), task('t-2', 10, 'tl-1')],
     }) as ProductiveResponse<ProductiveTask>,
-    repositionTask: async () => ({ success: true }),
+    repositionTask: async () => {},
     ...overrides,
   } as unknown as ProductiveAPIClient;
 }

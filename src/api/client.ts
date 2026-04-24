@@ -734,35 +734,30 @@ export class ProductiveAPIClient {
   }
 
   /**
-   * Reposition a task in a task list
-   * 
+   * Reposition a task in a task list. The endpoint returns 204 No Content
+   * on success, so there is no response body to surface.
+   *
    * @param taskId - ID of the task to reposition
    * @param attributes - Positioning attributes (move_before_id and/or move_after_id)
-   * @returns Promise resolving to the task response
-   * 
+   *
    * @example
-   * // Position task 1 after task 2
    * await client.repositionTask('1', { move_after_id: '2' });
-   * 
-   * // Position task 3 between tasks 1 and 2
-   * await client.repositionTask('3', { move_after_id: '1', move_before_id: '2' });
    */
   async repositionTask(
-    taskId: string, 
-    attributes: { 
-      move_before_id?: string; 
+    taskId: string,
+    attributes: {
+      move_before_id?: string;
       move_after_id?: string;
       placement?: number;
     }
-  ): Promise<any> {
+  ): Promise<void> {
     const requestBody = {
       data: {
         type: 'tasks',
-        attributes: { ...attributes }
-      }
+        attributes: { ...attributes },
+      },
     };
 
-    // The reposition endpoint returns 204 No Content on success
     const url = `${this.config.PRODUCTIVE_API_BASE_URL}tasks/${taskId}/reposition`;
 
     const response = await fetch(url, {
@@ -780,27 +775,6 @@ export class ProductiveAPIClient {
         throw new Error(`Task ${taskId} not found or cannot be repositioned.`);
       }
       throw new Error(`Reposition failed with status ${response.status}: ${response.statusText}`);
-    }
-
-    // If 204 No Content (success), return a minimal success response
-    if (response.status === 204) {
-      return {
-        success: true,
-        taskId: taskId,
-        message: `Task ${taskId} repositioned successfully`,
-      };
-    }
-
-    // For any other success response with content, try to parse JSON
-    try {
-      return await response.json();
-    } catch {
-      // If parsing fails but status was success, return a minimal success object
-      return {
-        success: true,
-        taskId: taskId,
-        message: `Task ${taskId} repositioned successfully`,
-      };
     }
   }
 
