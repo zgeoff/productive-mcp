@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import type { ProductiveAPIClient } from '../api/client.js';
 import type { TaskReposition } from '../api/types.js';
 
@@ -150,26 +151,41 @@ export const taskRepositionDefinition = {
   }
 };
 
-export const taskRepositionTool = async (apiClient: ProductiveAPIClient, args: z.infer<typeof taskRepositionSchema>) => {
+export const taskRepositionTool = async (
+  apiClient: ProductiveAPIClient,
+  args: unknown
+): Promise<{ content: Array<{ type: string; text: string }> }> => {
+  let params: z.infer<typeof taskRepositionSchema>;
   try {
-    const result = await repositionTask(apiClient, args);
-    
-    // Format the response to match the MCP tool expected format
-    // Handle the new response format which is a success object
+    params = taskRepositionSchema.parse(args);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid parameters: ${error.errors.map((e) => e.message).join(', ')}`
+      );
+    }
+    throw error;
+  }
+
+  try {
+    const result = await repositionTask(apiClient, params);
+
     if (result.success) {
       return {
         content: [{
           type: 'text',
-          text: `Task ${args.taskId} repositioned successfully.
-The task has been moved ${args.moveToTop ? 'to the top of the list' : 
-                           args.moveToBottom ? 'to the bottom of the list' : 
-                           args.move_before_id ? `before task ${args.move_before_id}` : 
-                           args.move_after_id ? `after task ${args.move_after_id}` : 
+          text: `Task ${params.taskId} repositioned successfully.
+The task has been moved ${params.moveToTop ? 'to the top of the list' :
+                           params.moveToBottom ? 'to the bottom of the list' :
+                           params.move_before_id ? `before task ${params.move_before_id}` :
+                           params.move_after_id ? `after task ${params.move_after_id}` :
                            'to a new position'}.`,
         }],
       };
-    } else if (result.data) {
-      // Fallback for old response format if somehow returned
+    }
+
+    if (result.data) {
       return {
         content: [{
           type: 'text',
@@ -178,24 +194,19 @@ Title: ${result.data.attributes?.title || 'Unknown'}
 Position updated according to the requested parameters.`,
         }],
       };
-    } else {
-      // Generic success if neither format is matched
-      return {
-        content: [{
-          type: 'text',
-          text: `Task repositioning operation completed successfully.`,
-        }],
-      };
     }
-  } catch (error) {
-    // Handle errors more gracefully
-    console.error('Error in taskRepositionTool:', error);
+
     return {
       content: [{
         type: 'text',
-        text: `Error repositioning task: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+        text: `Task repositioning operation completed successfully.`,
       }],
     };
+  } catch (error) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      error instanceof Error ? error.message : 'Unknown error occurred'
+    );
   }
 };
 

@@ -2,7 +2,6 @@ import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, ListPromptsRequestSchema, GetPromptRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
 
 const { version: pkgVersion } = createRequire(import.meta.url)('../package.json') as { version: string };
 import { getConfig } from './config/index.js';
@@ -23,7 +22,7 @@ import { listTimeEntresTool, createTimeEntryTool, listServicesTool, listProjectD
 import { updateTaskSprint, updateTaskSprintTool } from './tools/task-sprint.js';
 import { moveTaskToList, moveTaskToListTool } from './tools/task-list-move.js';
 import { addToBacklog, addToBacklogTool } from './tools/task-backlog.js';
-import { taskRepositionTool, taskRepositionDefinition, taskRepositionSchema } from './tools/task-reposition.js';
+import { taskRepositionTool, taskRepositionDefinition } from './tools/task-reposition.js';
 import { generateTimesheetPrompt, timesheetPromptDefinition, generateQuickTimesheetPrompt, quickTimesheetPromptDefinition } from './prompts/timesheet.js';
 import { listFolders, listFoldersTool, getFolder, getFolderTool, createFolder, createFolderTool, updateFolder, updateFolderTool, archiveFolder, archiveFolderTool, restoreFolder, restoreFolderTool } from './tools/folders.js';
 import { listSubtasksTool, listSubtasksDefinition, createSubtaskTool, createSubtaskDefinition } from './tools/subtasks.js';
@@ -237,10 +236,7 @@ export async function createServer() {
         return await addToBacklog(apiClient, args);
         
       case 'reposition_task':
-        if (!args?.taskId) {
-          throw new Error('taskId is required for task repositioning');
-        }
-        return await taskRepositionTool(apiClient, args as z.infer<typeof taskRepositionSchema>);
+        return await taskRepositionTool(apiClient, args);
 
       case 'delete_task':
         return await deleteTaskTool(apiClient, args);
