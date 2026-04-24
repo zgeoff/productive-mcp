@@ -67,39 +67,42 @@ The server requires the following environment variables:
 
 ## Usage with Claude Code
 
-Add the server using the CLI, pointing at your local build:
+This repo ships a `.mcp.json.example` at the root. The recommended setup uses project-level MCP config plus a local `.env` for secrets:
 
-```bash
-claude mcp add productive -- node /absolute/path/to/productive-mcp/build/index.js
-```
-
-Then provide the required environment variables using one of:
-
-**Option 1** — Export from your shell profile (`~/.zshrc` or `~/.bashrc`):
-```bash
-export PRODUCTIVE_API_TOKEN="your_api_token_here"
-export PRODUCTIVE_ORG_ID="your_organization_id_here"
-export PRODUCTIVE_USER_ID="your_user_id_here"
-```
-
-**Option 2** — Wrap the server in a shell script that sets env inline:
-
-1. Create `~/scripts/productive-mcp.sh`:
+1. **Build the server** (emits `build/index.js`):
    ```bash
-   #!/bin/bash
-   export PRODUCTIVE_API_TOKEN="your_api_token_here"
-   export PRODUCTIVE_ORG_ID="your_organization_id_here"
-   export PRODUCTIVE_USER_ID="your_user_id_here"
-   node /absolute/path/to/productive-mcp/build/index.js
+   bun install
+   bun run build
    ```
 
-2. Make it executable and register it:
+2. **Create `.env`** at the repo root (gitignored):
    ```bash
-   chmod +x ~/scripts/productive-mcp.sh
-   claude mcp add productive ~/scripts/productive-mcp.sh
+   PRODUCTIVE_API_TOKEN=your_api_token_here
+   PRODUCTIVE_ORG_ID=your_organization_id_here
+   PRODUCTIVE_USER_ID=your_user_id_here   # optional, required for my_tasks
+   ```
+   The server loads `.env` relative to the built module, so it works regardless of where Claude Code spawns the process.
+
+3. **Create `.mcp.json`** at the repo root (also gitignored — contains an absolute path):
+   ```bash
+   cp .mcp.json.example .mcp.json
+   # edit .mcp.json to replace /ABSOLUTE/PATH/TO with your real path
+   ```
+   The config is minimal — no `env` block needed, since dotenv handles secrets:
+   ```json
+   {
+     "mcpServers": {
+       "productive": {
+         "command": "node",
+         "args": ["/absolute/path/to/productive-mcp/build/index.js"]
+       }
+     }
+   }
    ```
 
-**Option 3** — Edit `~/.claude/settings.json` directly:
+4. **Launch Claude Code from the repo root** — it'll pick up `.mcp.json` automatically.
+
+If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -107,16 +110,14 @@ export PRODUCTIVE_USER_ID="your_user_id_here"
       "command": "node",
       "args": ["/absolute/path/to/productive-mcp/build/index.js"],
       "env": {
-        "PRODUCTIVE_API_TOKEN": "your_api_token_here",
-        "PRODUCTIVE_ORG_ID": "your_organization_id_here",
-        "PRODUCTIVE_USER_ID": "your_user_id_here"
+        "PRODUCTIVE_API_TOKEN": "...",
+        "PRODUCTIVE_ORG_ID": "...",
+        "PRODUCTIVE_USER_ID": "..."
       }
     }
   }
 }
 ```
-
-`PRODUCTIVE_USER_ID` is optional but required for the `my_tasks` tool. Restart Claude Code after configuring.
 
 ## Available Tools
 

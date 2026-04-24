@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "productive": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/productive-mcp/build/index.js"]
+    }
+  }
+}

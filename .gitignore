@@ -30,6 +30,11 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 
+# Project-level MCP config contains an absolute path to build/index.js
+# (Claude Code resolves MCP command paths from the launch CWD, so
+# relative paths are unreliable). Commit .mcp.json.example instead.
+.mcp.json
+
 # TypeScript
 *.tsbuildinfo
 

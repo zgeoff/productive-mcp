@@ -1,9 +1,14 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
 import { z } from 'zod';
 
-// MCP stdio reserves stdout for JSON-RPC. dotenv 16.6+ has a native
-// quiet option that suppresses its startup banner.
-config({ quiet: true });
+// Resolve .env relative to this module rather than process.cwd(), so the
+// server picks up the repo's .env regardless of where the MCP client
+// spawns it from. `quiet: true` silences dotenv's banner — MCP stdio
+// reserves stdout for JSON-RPC framing.
+const moduleDir = dirname(fileURLToPath(import.meta.url));
+config({ quiet: true, path: resolve(moduleDir, '../../.env') });
 
 const configSchema = z.object({
   PRODUCTIVE_API_TOKEN: z.string().min(1, 'API token is required'),
