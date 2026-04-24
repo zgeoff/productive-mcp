@@ -1,18 +1,10 @@
 import { z } from 'zod';
 import { ProductiveAPIClient } from '../api/client.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { ProductiveIncludedResource } from '../api/types.js';
+import type { ProductiveIncludedResource } from '../api/types.js';
+import { resolvePersonName } from '../resolvers/resolve-person-name.js';
 
 type ToolResult = { content: Array<{ type: string; text: string }> };
-
-function resolvePersonName(personId: string | undefined, included?: ProductiveIncludedResource[]): string | undefined {
-  if (!personId || !included) return undefined;
-  const person = included.find(item => item.type === 'people' && item.id === personId);
-  if (!person) return undefined;
-  const first = person.attributes.first_name || '';
-  const last = person.attributes.last_name || '';
-  return `${first} ${last}`.trim() || undefined;
-}
 
 function truncateBody(body: string, maxLength = 200): string {
   if (body.length <= maxLength) return body;

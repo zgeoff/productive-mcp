@@ -1,23 +1,9 @@
 import { z } from 'zod';
 import { ProductiveAPIClient } from '../api/client.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { ProductiveTaskUpdate, ProductiveIncludedResource } from '../api/types.js';
-
-function resolvePersonName(personId: string | undefined, included?: ProductiveIncludedResource[]): string | undefined {
-  if (!personId || !included) return undefined;
-  const person = included.find(item => item.type === 'people' && item.id === personId);
-  if (!person) return undefined;
-  const first = person.attributes.first_name || '';
-  const last = person.attributes.last_name || '';
-  return `${first} ${last}`.trim() || undefined;
-}
-
-function resolveWorkflowStatus(task: { relationships?: Record<string, any> }, included?: ProductiveIncludedResource[]): string | undefined {
-  const statusId = task.relationships?.workflow_status?.data?.id;
-  if (!statusId || !included) return undefined;
-  const status = included.find(item => item.type === 'workflow_statuses' && item.id === statusId);
-  return status?.attributes?.name || undefined;
-}
+import { ProductiveTaskUpdate } from '../api/types.js';
+import { resolvePersonName } from '../resolvers/resolve-person-name.js';
+import { resolveWorkflowStatus } from '../resolvers/resolve-workflow-status.js';
 
 const listTasksSchema = z.object({
   project_id: z.string().optional(),

@@ -2,14 +2,7 @@ import { z } from 'zod';
 import { ProductiveAPIClient } from '../api/client.js';
 import { Config } from '../config/index.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { ProductiveIncludedResource } from '../api/types.js';
-
-function resolveWorkflowStatus(task: { relationships?: Record<string, any> }, included?: ProductiveIncludedResource[]): string | undefined {
-  const statusId = task.relationships?.workflow_status?.data?.id;
-  if (!statusId || !included) return undefined;
-  const status = included.find(item => item.type === 'workflow_statuses' && item.id === statusId);
-  return status?.attributes?.name || undefined;
-}
+import { resolveWorkflowStatus } from '../resolvers/resolve-workflow-status.js';
 
 const myTasksSchema = z.object({
   status: z.enum(['open', 'closed']).optional(),
