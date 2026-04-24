@@ -65,8 +65,6 @@ export class ProductiveAPIClient {
 
       if (!response.ok) {
         const errorData = await response.json() as ProductiveError;
-        console.error('API Error Response:', JSON.stringify(errorData, null, 2));
-        console.error('Request was to:', url);
         const errorMessage = errorData.errors?.[0]?.detail || `API request failed with status ${response.status}`;
         throw new Error(errorMessage);
       }
@@ -524,8 +522,6 @@ export class ProductiveAPIClient {
    * });
    */
   async createTimeEntry(timeEntryData: ProductiveTimeEntryCreate): Promise<ProductiveSingleResponse<ProductiveTimeEntry>> {
-    // Debug: Log the request body
-    console.error('Creating time entry with data:', JSON.stringify(timeEntryData, null, 2));
     return this.makeRequest<ProductiveSingleResponse<ProductiveTimeEntry>>('time_entries', {
       method: 'POST',
       body: JSON.stringify(timeEntryData),
@@ -768,48 +764,43 @@ export class ProductiveAPIClient {
 
     // The reposition endpoint returns 204 No Content on success
     const url = `${this.config.PRODUCTIVE_API_BASE_URL}tasks/${taskId}/reposition`;
-    
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'X-Auth-Token': this.config.PRODUCTIVE_API_TOKEN,
+        'X-Organization-Id': this.config.PRODUCTIVE_ORG_ID,
+        'Content-Type': 'application/vnd.api+json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Task ${taskId} not found or cannot be repositioned.`);
+      }
+      throw new Error(`Reposition failed with status ${response.status}: ${response.statusText}`);
+    }
+
+    // If 204 No Content (success), return a minimal success response
+    if (response.status === 204) {
+      return {
+        success: true,
+        taskId: taskId,
+        message: `Task ${taskId} repositioned successfully`,
+      };
+    }
+
+    // For any other success response with content, try to parse JSON
     try {
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'X-Auth-Token': this.config.PRODUCTIVE_API_TOKEN,
-          'X-Organization-Id': this.config.PRODUCTIVE_ORG_ID,
-          'Content-Type': 'application/vnd.api+json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Task ${taskId} not found or cannot be repositioned.`);
-        }
-        throw new Error(`Reposition failed with status ${response.status}: ${response.statusText}`);
-      }
-      
-      // If 204 No Content (success), return a minimal success response
-      if (response.status === 204) {
-        return {
-          success: true,
-          taskId: taskId,
-          message: `Task ${taskId} repositioned successfully`
-        };
-      }
-      
-      // For any other success response with content, try to parse JSON
-      try {
-        return await response.json();
-      } catch (e) {
-        // If parsing fails but status was success, return a minimal success object
-        return {
-          success: true,
-          taskId: taskId,
-          message: `Task ${taskId} repositioned successfully`
-        };
-      }
-    } catch (error) {
-      console.error('Error repositioning task:', error);
-      throw error;
+      return await response.json();
+    } catch {
+      // If parsing fails but status was success, return a minimal success object
+      return {
+        success: true,
+        taskId: taskId,
+        message: `Task ${taskId} repositioned successfully`,
+      };
     }
   }
 

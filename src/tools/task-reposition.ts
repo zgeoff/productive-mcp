@@ -25,8 +25,6 @@ export const repositionTask = async (
   
   // If we can't find the task list ID, we'll try a different approach
   if (!taskListId) {
-    console.warn('Task list ID not found for task', taskId);
-    
     // Get all tasks and try to find suitable ones to position against
     const allTasks = await apiClient.listTasks({
       limit: 100
@@ -116,7 +114,6 @@ export const repositionTask = async (
   }
   
   // As a last resort, try default API behavior with empty attributes
-  console.warn('Using default repositioning with empty attributes');
   return await apiClient.repositionTask(taskId, {});
 };
 
