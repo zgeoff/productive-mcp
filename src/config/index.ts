@@ -1,15 +1,9 @@
 import { config } from 'dotenv';
 import { z } from 'zod';
 
-// Silence dotenv output to stdout (MCP requires clean stdout)
-const originalWrite = process.stdout.write;
-process.stdout.write = () => true;
-
-// Load environment variables
-config();
-
-// Restore stdout.write
-process.stdout.write = originalWrite;
+// MCP stdio reserves stdout for JSON-RPC. dotenv 16.6+ has a native
+// quiet option that suppresses its startup banner.
+config({ quiet: true });
 
 const configSchema = z.object({
   PRODUCTIVE_API_TOKEN: z.string().min(1, 'API token is required'),
