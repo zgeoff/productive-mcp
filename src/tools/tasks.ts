@@ -166,35 +166,18 @@ export async function getTaskTool(
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   try {
     const params = getTaskSchema.parse(args);
-    
-    // Import and use config directly
-    const config = await import('../config/index.js').then(m => m.getConfig());
-    
-    // Create URL with task_list included
-    const url = `${config.PRODUCTIVE_API_BASE_URL}tasks/${params.task_id}?include=task_list,assignee,workflow_status`;
-    
-    // Create request with proper headers from config
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-Auth-Token': config.PRODUCTIVE_API_TOKEN,
-        'X-Organization-Id': config.PRODUCTIVE_ORG_ID,
-        'Content-Type': 'application/vnd.api+json',
-      }
+
+    const response = await client.getTask(params.task_id, {
+      include: ['task_list', 'assignee', 'workflow_status'],
     });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get task: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    const task = data.data;
+
+    const task = response.data;
+    const included = response.included;
     const projectId = task.relationships?.project?.data?.id;
     const assigneeId = task.relationships?.assignee?.data?.id;
     const taskListId = task.relationships?.task_list?.data?.id;
-    
-    // Resolve workflow status name from included data, fall back to closed boolean
-    const workflowStatusName = resolveWorkflowStatus(task, data.included);
+
+    const workflowStatusName = resolveWorkflowStatus(task, included);
     const fallbackStatus = task.attributes.closed === false ? 'open' : task.attributes.closed === true ? 'closed' : 'unknown';
     const statusText = workflowStatusName || fallbackStatus;
 
@@ -202,23 +185,23 @@ export async function getTaskTool(
     text += `Title: ${task.attributes.title}\n`;
     text += `ID: ${task.id}\n`;
     text += `Status: ${statusText}\n`;
-    
+
     if (task.attributes.description) {
       text += `Description: ${task.attributes.description}\n`;
     }
-    
+
     if (task.attributes.due_date) {
       text += `Due Date: ${task.attributes.due_date}\n`;
     } else {
       text += `Due Date: No due date set\n`;
     }
-    
+
     if (projectId) {
       text += `Project ID: ${projectId}\n`;
     }
-    
+
     if (assigneeId) {
-      const assigneeName = resolvePersonName(assigneeId, data.included);
+      const assigneeName = resolvePersonName(assigneeId, included);
       if (assigneeName) {
         text += `Assignee: ${assigneeName} (ID: ${assigneeId})\n`;
       } else {
@@ -227,59 +210,51 @@ export async function getTaskTool(
     } else {
       text += `Assignee: Unassigned\n`;
     }
-    
+
     if (task.attributes.created_at) {
       text += `Created: ${task.attributes.created_at}\n`;
     }
-    
+
     if (task.attributes.updated_at) {
       text += `Updated: ${task.attributes.updated_at}\n`;
     }
-    
-    // Include any additional attributes that might be useful
+
     if (task.attributes.priority !== undefined) {
       text += `Priority: ${task.attributes.priority}\n`;
     }
-    
+
     if (task.attributes.placement !== undefined) {
       text += `Position: ${task.attributes.placement}\n`;
     }
-    
-    // Add useful additional fields from actual API response
+
     if (task.attributes.task_number) {
       text += `Task Number: ${task.attributes.task_number}\n`;
     }
-    
+
     if (task.attributes.private !== undefined) {
       text += `Private: ${task.attributes.private ? 'Yes' : 'No'}\n`;
     }
-    
+
     if (task.attributes.initial_estimate) {
       text += `Initial Estimate: ${task.attributes.initial_estimate}\n`;
     }
-    
+
     if (task.attributes.worked_time) {
       text += `Worked Time: ${task.attributes.worked_time}\n`;
     }
-    
+
     if (task.attributes.last_activity_at) {
       text += `Last Activity: ${task.attributes.last_activity_at}\n`;
     }
-    
-    // Include task list ID information if available
+
     if (taskListId) {
       text += `Task List ID: ${taskListId}\n`;
-      
-    // If there's included data for the task list, include the name
-    console.log('Included data:', JSON.stringify(data.included));
-    if (data.included && Array.isArray(data.included)) {
-      const taskList = data.included.find((item: any) => item.type === 'task_lists' && item.id === taskListId);
+      const taskList = included?.find((item) => item.type === 'task_lists' && item.id === taskListId);
       if (taskList) {
         text += `Task List: ${taskList.attributes.name}\n`;
       }
     }
-    }
-    
+
     return {
       content: [{
         type: 'text',
@@ -293,7 +268,7 @@ export async function getTaskTool(
         `Invalid parameters: ${error.errors.map(e => e.message).join(', ')}`
       );
     }
-    
+
     throw new McpError(
       ErrorCode.InternalError,
       error instanceof Error ? error.message : 'Unknown error occurred'
