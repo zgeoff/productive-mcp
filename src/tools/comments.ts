@@ -126,7 +126,7 @@ export const addTaskCommentDefinition = {
       },
       comment: {
         type: 'string',
-        description: 'Comment content (required). Supports HTML formatting with tags like <div>, <p>, <strong>, <em>, <ul>, <li>, <a href="">.',
+        description: 'Comment content (required). Supports HTML formatting with tags like <div>, <p>, <strong>, <em>, <ul>, <li>, <a href="">. Raw URLs are NOT auto-linkified — wrap them explicitly, e.g. <a href="https://example.com">example.com</a>.',
       },
       mentions: {
         type: 'array',
@@ -348,7 +348,7 @@ export const updateCommentDefinition = {
       },
       body: {
         type: 'string',
-        description: 'The new comment body content (required). Supports HTML formatting.',
+        description: 'The new comment body content (required). Supports HTML formatting (e.g. <p>, <strong>, <a href="">). Raw URLs are NOT auto-linkified — wrap them explicitly, e.g. <a href="https://example.com">example.com</a>.',
       },
       mentions: {
         type: 'array',
