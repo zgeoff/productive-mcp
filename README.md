@@ -199,10 +199,10 @@ If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`
 
 | Tool | Description |
 |------|-------------|
-| `add_task_comment` | Add a comment to a task. Requires `task_id`, `comment` (supports HTML) |
+| `add_task_comment` | Add a comment to a task. Requires `task_id`, `comment` (supports HTML). Optional `mentions: [{person_id, name}]` — reference from the body with `{{@0}}`, `{{@1}}`, … to tag people and fire notifications |
 | `list_comments` | List comments. Filter by `task_id`, `project_id`, `limit` |
 | `get_comment` | Get full comment details by `comment_id` |
-| `update_comment` | Edit a comment. Requires `comment_id`, `body` |
+| `update_comment` | Edit a comment. Requires `comment_id`, `body`. Optional `mentions` (same shape as `add_task_comment`) |
 | `delete_comment` | Delete a comment by `comment_id` |
 | `pin_comment` | Pin a comment by `comment_id` |
 | `unpin_comment` | Unpin a comment by `comment_id` |

@@ -11,11 +11,51 @@ function truncateBody(body: string, maxLength = 200): string {
   return body.substring(0, maxLength) + '...';
 }
 
+// ---- Mentions ----
+
+export type MentionInput = { person_id: string; name: string };
+
+const mentionSchema = z.object({
+  person_id: z.string().min(1, 'Mention person_id is required'),
+  name: z.string().min(1, 'Mention name is required'),
+});
+
+const mentionsDescription =
+  'Optional array of people to tag. Reference each from the body using {{@0}}, {{@1}}, etc. (index into this array). ' +
+  'Each tag fires a notification to the person. Example: comment "{{@0}} please review" with mentions [{person_id: "12345", name: "Jane Doe"}].';
+
+export function formatMentionToken(mention: MentionInput): string {
+  const payload = {
+    type: 'person',
+    id: mention.person_id,
+    label: mention.name,
+    avatar_url: null,
+    attachment_url: null,
+    is_done: false,
+  };
+  return `@[${JSON.stringify(payload)}]`;
+}
+
+export function applyMentions(body: string, mentions: MentionInput[] | undefined): string {
+  if (!mentions || mentions.length === 0) return body;
+  return body.replace(/\{\{@(\d+)\}\}/g, (match, idx: string) => {
+    const mention = mentions[Number(idx)];
+    if (!mention) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Mention placeholder ${match} has no matching entry in mentions (length ${mentions.length})`
+      );
+    }
+    return formatMentionToken(mention);
+  });
+}
+
 // ---- Add Task Comment ----
 
 const addTaskCommentSchema = z.object({
   task_id: z.string().min(1, 'Task ID is required'),
   comment: z.string().min(1, 'Comment text is required'),
+  mentions: z.array(mentionSchema).optional(),
 });
 
 export async function addTaskCommentTool(
@@ -24,12 +64,13 @@ export async function addTaskCommentTool(
 ): Promise<ToolResult> {
   try {
     const params = addTaskCommentSchema.parse(args);
+    const body = applyMentions(params.comment, params.mentions);
 
     const commentData = {
       data: {
         type: 'comments' as const,
         attributes: {
-          body: params.comment,
+          body,
         },
         relationships: {
           task: {
@@ -86,6 +127,18 @@ export const addTaskCommentDefinition = {
       comment: {
         type: 'string',
         description: 'Comment content (required). Supports HTML formatting with tags like <div>, <p>, <strong>, <em>, <ul>, <li>, <a href="">.',
+      },
+      mentions: {
+        type: 'array',
+        description: mentionsDescription,
+        items: {
+          type: 'object',
+          properties: {
+            person_id: { type: 'string', description: 'Productive person ID to tag' },
+            name: { type: 'string', description: 'Display name for the tag (e.g. "Jane Doe")' },
+          },
+          required: ['person_id', 'name'],
+        },
       },
     },
     required: ['task_id', 'comment'],
@@ -241,6 +294,7 @@ export const getCommentDefinition = {
 const updateCommentSchema = z.object({
   comment_id: z.string().min(1, 'Comment ID is required'),
   body: z.string().min(1, 'Comment body is required'),
+  mentions: z.array(mentionSchema).optional(),
 });
 
 export async function updateCommentTool(
@@ -249,13 +303,14 @@ export async function updateCommentTool(
 ): Promise<ToolResult> {
   try {
     const params = updateCommentSchema.parse(args);
+    const body = applyMentions(params.body, params.mentions);
 
     const response = await client.updateComment(params.comment_id, {
       data: {
         type: 'comments',
         id: params.comment_id,
         attributes: {
-          body: params.body,
+          body,
         },
       },
     });
@@ -294,6 +349,18 @@ export const updateCommentDefinition = {
       body: {
         type: 'string',
         description: 'The new comment body content (required). Supports HTML formatting.',
+      },
+      mentions: {
+        type: 'array',
+        description: mentionsDescription,
+        items: {
+          type: 'object',
+          properties: {
+            person_id: { type: 'string', description: 'Productive person ID to tag' },
+            name: { type: 'string', description: 'Display name for the tag (e.g. "Jane Doe")' },
+          },
+          required: ['person_id', 'name'],
+        },
       },
     },
     required: ['comment_id', 'body'],
