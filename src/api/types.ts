@@ -12,10 +12,8 @@ export interface ProductiveCompany {
     tag_list?: string[];
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
-    [key: string]: any;
   };
 }
 
@@ -28,7 +26,6 @@ export interface ProductiveProject {
     status: 'active' | 'archived';
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     company?: {
@@ -37,7 +34,6 @@ export interface ProductiveProject {
         type: 'companies';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -52,7 +48,16 @@ export interface ProductiveTask {
     due_date?: string;
     created_at: string;
     updated_at: string;
-    [key: string]: any;
+    placement?: number;
+    priority?: number;
+    task_number?: number;
+    private?: boolean;
+    initial_estimate?: number;
+    worked_time?: number;
+    last_activity_at?: string;
+    // Custom fields are keyed by the organisation's custom-field IDs, and the
+    // value shape varies per field type — consumers narrow at the usage site.
+    custom_fields?: Record<string, unknown>;
   };
   relationships?: {
     project?: {
@@ -67,7 +72,18 @@ export interface ProductiveTask {
         type: 'people';
       };
     };
-    [key: string]: any;
+    task_list?: {
+      data: {
+        id: string;
+        type: 'task_lists';
+      };
+    };
+    workflow_status?: {
+      data: {
+        id: string;
+        type: 'workflow_statuses';
+      };
+    };
   };
 }
 
@@ -103,7 +119,6 @@ export interface ProductiveBoard {
     position?: number;
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     project?: {
@@ -112,7 +127,6 @@ export interface ProductiveBoard {
         type: 'projects';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -163,7 +177,6 @@ export interface ProductiveTaskList {
     position?: number;
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     board?: {
@@ -172,7 +185,6 @@ export interface ProductiveTaskList {
         type: 'boards';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -266,7 +278,6 @@ export interface ProductivePerson {
     avatar_url?: string;
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     company?: {
@@ -275,7 +286,6 @@ export interface ProductivePerson {
         type: 'companies';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -288,7 +298,6 @@ export interface ProductiveActivity {
     item_id: string;
     changes?: Record<string, any>;
     created_at: string;
-    [key: string]: any;
   };
   relationships?: {
     organization?: {
@@ -303,7 +312,6 @@ export interface ProductiveActivity {
         type: 'people';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -322,7 +330,6 @@ export interface ProductiveComment {
     pinned_at?: string;
     reactions?: Record<string, any>;
     version_number?: number;
-    [key: string]: any;
   };
   relationships?: {
     creator?: {
@@ -337,7 +344,6 @@ export interface ProductiveComment {
         type: 'tasks';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -368,7 +374,6 @@ export interface ProductiveWorkflowStatus {
     category_id: number; // 1=not started, 2=started, 3=closed
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     workflow?: {
@@ -377,7 +382,6 @@ export interface ProductiveWorkflowStatus {
         type: 'workflows';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -394,7 +398,6 @@ export interface ProductiveService {
     is_active?: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     company?: {
@@ -403,7 +406,6 @@ export interface ProductiveService {
         type: 'companies';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -421,7 +423,6 @@ export interface ProductiveTimeEntry {
     note?: string; // Description of work performed
     created_at: string;
     updated_at: string;
-    [key: string]: any;
   };
   relationships?: {
     person?: {
@@ -448,7 +449,6 @@ export interface ProductiveTimeEntry {
         type: 'projects';
       };
     };
-    [key: string]: any;
   };
 }
 
@@ -464,7 +464,6 @@ export interface ProductiveDeal {
     value?: number;
     created_at?: string;
     updated_at?: string;
-    [key: string]: any;
   };
   relationships?: {
     project?: {
@@ -479,7 +478,6 @@ export interface ProductiveDeal {
         type: 'services';
       }>;
     };
-    [key: string]: any;
   };
 }
 

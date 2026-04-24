@@ -94,9 +94,12 @@ export async function updateTaskSprint(
     });
     const updatedTask = response.data;
     
-    // Get the updated sprint values for display
-    const updatedSprints = updatedTask.attributes.custom_fields?.[SPRINT_CUSTOM_FIELD_ID] || [];
-    const sprintNames = updatedSprints.map((id: string) => {
+    // Get the updated sprint values for display. The sprint custom field is a
+    // multi-select whose value is an array of option IDs — narrow here since
+    // custom_fields is typed as Record<string, unknown>.
+    const rawSprints = updatedTask.attributes.custom_fields?.[SPRINT_CUSTOM_FIELD_ID];
+    const updatedSprints = Array.isArray(rawSprints) ? (rawSprints as string[]) : [];
+    const sprintNames = updatedSprints.map((id) => {
       const entry = Object.entries(SPRINT_MAPPING).find(([_, value]) => value === id);
       return entry ? entry[0] : id;
     });
