@@ -1,8 +1,8 @@
 # Productive.io MCP Server
 
-[![npm version](https://badge.fury.io/js/productive-mcp.svg)](https://www.npmjs.com/package/productive-mcp)
+An MCP (Model Context Protocol) server that enables Claude Code and other MCP-compatible clients to interact with the Productive.io API.
 
-An MCP (Model Context Protocol) server that enables Claude Desktop, Claude Code, and other MCP-compatible clients to interact with the Productive.io API.
+> **Fork notice:** This is a fork of [berwickgeek/productive-mcp](https://github.com/berwickgeek/productive-mcp). It is **not published to npm** — install by building from source (see below).
 
 ## Features
 
@@ -23,29 +23,23 @@ An MCP (Model Context Protocol) server that enables Claude Desktop, Claude Code,
 
 ## Installation
 
-### Via npm (Recommended)
+Requires **Node.js 20+** (enforced via `.npmrc`).
 
-Install globally:
-```bash
-npm install -g productive-mcp
-```
-
-Or run directly with npx (no installation required):
-```bash
-npx productive-mcp
-```
-
-### From Source
-
-1. Clone this repository
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/zgeoff/productive-mcp.git
+   cd productive-mcp
+   ```
 2. Install dependencies:
    ```bash
    npm install
    ```
-3. Build the project:
+3. Build:
    ```bash
    npm run build
    ```
+
+The built entrypoint is `build/index.js`. Note the absolute path — you'll reference it when configuring your MCP client.
 
 ## Configuration
 
@@ -71,114 +65,47 @@ The server requires the following environment variables:
 | `PRODUCTIVE_ORG_ID` | Yes | Your organization ID |
 | `PRODUCTIVE_USER_ID` | No | Your user ID (required for `my_tasks` tool) |
 
-## Usage with Claude Desktop
-
-Add the server to your Claude Desktop configuration file:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-### Using npx (Recommended)
-
-```json
-{
-  "mcpServers": {
-    "productive": {
-      "command": "npx",
-      "args": ["-y", "productive-mcp"],
-      "env": {
-        "PRODUCTIVE_API_TOKEN": "your_api_token_here",
-        "PRODUCTIVE_ORG_ID": "your_organization_id_here",
-        "PRODUCTIVE_USER_ID": "your_user_id_here"
-      }
-    }
-  }
-}
-```
-
-### Using Global Installation
-
-```json
-{
-  "mcpServers": {
-    "productive": {
-      "command": "productive-mcp",
-      "env": {
-        "PRODUCTIVE_API_TOKEN": "your_api_token_here",
-        "PRODUCTIVE_ORG_ID": "your_organization_id_here",
-        "PRODUCTIVE_USER_ID": "your_user_id_here"
-      }
-    }
-  }
-}
-```
-
-### Using Local Build
-
-```json
-{
-  "mcpServers": {
-    "productive": {
-      "command": "node",
-      "args": ["/path/to/productive-mcp/build/index.js"],
-      "env": {
-        "PRODUCTIVE_API_TOKEN": "your_api_token_here",
-        "PRODUCTIVE_ORG_ID": "your_organization_id_here",
-        "PRODUCTIVE_USER_ID": "your_user_id_here"
-      }
-    }
-  }
-}
-```
-
-**Note**: `PRODUCTIVE_USER_ID` is optional but required for the `my_tasks` tool to work.
-
-After adding the configuration, restart Claude Desktop.
-
 ## Usage with Claude Code
 
-Add the server to your Claude Code configuration using the CLI:
+Add the server using the CLI, pointing at your local build:
 
 ```bash
-claude mcp add productive -- npx -y productive-mcp
+claude mcp add productive -- node /absolute/path/to/productive-mcp/build/index.js
 ```
 
-Then set your environment variables. You can either:
+Then provide the required environment variables using one of:
 
-**Option 1**: Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
+**Option 1** — Export from your shell profile (`~/.zshrc` or `~/.bashrc`):
 ```bash
 export PRODUCTIVE_API_TOKEN="your_api_token_here"
 export PRODUCTIVE_ORG_ID="your_organization_id_here"
 export PRODUCTIVE_USER_ID="your_user_id_here"
 ```
 
-**Option 2**: Create a wrapper script and add it as an MCP server:
+**Option 2** — Wrap the server in a shell script that sets env inline:
 
-1. Create a script file (e.g., `~/scripts/productive-mcp.sh`):
+1. Create `~/scripts/productive-mcp.sh`:
    ```bash
    #!/bin/bash
    export PRODUCTIVE_API_TOKEN="your_api_token_here"
    export PRODUCTIVE_ORG_ID="your_organization_id_here"
    export PRODUCTIVE_USER_ID="your_user_id_here"
-   npx -y productive-mcp
+   node /absolute/path/to/productive-mcp/build/index.js
    ```
 
-2. Make it executable:
+2. Make it executable and register it:
    ```bash
    chmod +x ~/scripts/productive-mcp.sh
-   ```
-
-3. Add to Claude Code:
-   ```bash
    claude mcp add productive ~/scripts/productive-mcp.sh
    ```
 
-**Option 3**: Edit the Claude Code settings file directly at `~/.claude/settings.json`:
+**Option 3** — Edit `~/.claude/settings.json` directly:
 ```json
 {
   "mcpServers": {
     "productive": {
-      "command": "npx",
-      "args": ["-y", "productive-mcp"],
+      "command": "node",
+      "args": ["/absolute/path/to/productive-mcp/build/index.js"],
       "env": {
         "PRODUCTIVE_API_TOKEN": "your_api_token_here",
         "PRODUCTIVE_ORG_ID": "your_organization_id_here",
@@ -189,7 +116,7 @@ export PRODUCTIVE_USER_ID="your_user_id_here"
 }
 ```
 
-Restart Claude Code after configuration.
+`PRODUCTIVE_USER_ID` is optional but required for the `my_tasks` tool. Restart Claude Code after configuring.
 
 ## Available Tools
 

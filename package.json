@@ -1,21 +1,13 @@
 {
   "name": "productive-mcp",
   "version": "1.1.2",
+  "private": true,
   "type": "module",
   "main": "./build/index.js",
-  "bin": {
-    "productive-mcp": "./build/index.js"
-  },
-  "files": [
-    "build",
-    "README.md"
-  ],
   "scripts": {
     "build": "tsc && chmod +x build/index.js",
     "dev": "tsc --watch",
-    "start": "node build/index.js",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node build/index.js"
   },
   "keywords": [
     "mcp",
@@ -31,12 +23,12 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/berwickgeek/productive-mcp.git"
+    "url": "git+https://github.com/zgeoff/productive-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/berwickgeek/productive-mcp/issues"
+    "url": "https://github.com/zgeoff/productive-mcp/issues"
   },
-  "homepage": "https://github.com/berwickgeek/productive-mcp#readme",
+  "homepage": "https://github.com/zgeoff/productive-mcp#readme",
   "engines": {
     "node": ">=20.0.0"
   },
