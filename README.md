@@ -242,7 +242,6 @@ export PRODUCTIVE_USER_ID="your_user_id_here"
 | `list_time_entries` | List time entries. Filter by `date`, `after`, `before`, `person_id`, `project_id`, `task_id`, `service_id` |
 | `create_time_entry` | Create a time entry. Requires `date`, `time` (minutes), `person_id`, `service_id`. Optional `task_id`, `note` |
 | `list_services` | List services. Filter by `company_id`, `limit` |
-| `get_project_services` | Get services for a project |
 | `list_project_deals` | List deals/budgets for a project |
 | `list_deal_services` | List services for a deal/budget |
 

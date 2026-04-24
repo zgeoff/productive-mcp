@@ -88,11 +88,6 @@ const listServicesSchema = z.object({
   limit: z.number().min(1).max(200).default(30).optional(),
 });
 
-const getProjectServicesSchema = z.object({
-  project_id: z.string().min(1, 'Project ID is required'),
-  limit: z.number().min(1).max(200).default(30).optional(),
-});
-
 export async function listTimeEntresTool(
   client: ProductiveAPIClient,
   args: unknown,
@@ -435,65 +430,6 @@ export async function listServicesTool(
   }
 }
 
-export async function getProjectServicesTool(
-  client: ProductiveAPIClient,
-  args: unknown
-): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const params = getProjectServicesSchema.parse(args);
-    
-    // First get the project to verify it exists and get company info
-    const projectResponse = await client.listProjects({
-      limit: 1,
-    });
-    
-    // Then get services for the project's company
-    // Note: This is a simplified approach - in practice you might need
-    // to get the project details first to find its company
-    const response = await client.listServices({
-      limit: params.limit,
-    });
-    
-    if (!response.data || response.data.length === 0) {
-      return {
-        content: [{
-          type: 'text',
-          text: `No active services found for project ${params.project_id}.`,
-        }],
-      };
-    }
-    
-    const servicesText = response.data.map(service => {
-      const companyId = service.relationships?.company?.data?.id;
-      
-      return `• ${service.attributes.name} (ID: ${service.id})
-  ${companyId ? `Company ID: ${companyId}` : ''}
-  ${service.attributes.description ? `Description: ${service.attributes.description}` : 'No description'}`;
-    }).join('\n\n');
-    
-    const summary = `Services available for project ${params.project_id} (${response.data.length} service${response.data.length !== 1 ? 's' : ''}):\n\n${servicesText}`;
-    
-    return {
-      content: [{
-        type: 'text',
-        text: summary,
-      }],
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        `Invalid parameters: ${error.errors.map(e => e.message).join(', ')}`
-      );
-    }
-    
-    throw new McpError(
-      ErrorCode.InternalError,
-      error instanceof Error ? error.message : 'Unknown error occurred'
-    );
-  }
-}
-
 export const listTimeEntriesDefinition = {
   name: 'list_time_entries',
   description: 'View existing time entries from Productive.io with detailed information including service and budget relationships. Use this to see what time has been logged and to which projects/services. If PRODUCTIVE_USER_ID is configured, you can use "me" to refer to the configured user for person_id.',
@@ -779,24 +715,3 @@ export const listDealServicesDefinition = {
   },
 };
 
-export const getProjectServicesDefinition = {
-  name: 'get_project_services',
-  description: 'DEPRECATED: Use the proper workflow instead: list_projects → list_project_deals → list_deal_services → create_time_entry. This tool does not properly handle the project → deal/budget → service hierarchy required for timesheet entries.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      project_id: {
-        type: 'string',
-        description: 'The ID of the project',
-      },
-      limit: {
-        type: 'number',
-        description: 'Number of services to return (1-200)',
-        minimum: 1,
-        maximum: 200,
-        default: 30,
-      },
-    },
-    required: ['project_id'],
-  },
-};
