@@ -88,7 +88,7 @@ const listServicesSchema = z.object({
   limit: z.number().min(1).max(200).default(30).optional(),
 });
 
-export async function listTimeEntresTool(
+export async function listTimeEntriesTool(
   client: ProductiveAPIClient,
   args: unknown,
   config?: { PRODUCTIVE_USER_ID?: string }

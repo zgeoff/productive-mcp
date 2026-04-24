@@ -5,3 +5,9 @@ test('time-entries module does not export the removed get_project_services tool'
   expect(mod).not.toHaveProperty('getProjectServicesTool');
   expect(mod).not.toHaveProperty('getProjectServicesDefinition');
 });
+
+test('time-entries module exports listTimeEntriesTool (not the old misspelling)', async () => {
+  const mod = await import('./time-entries.js');
+  expect(mod).toHaveProperty('listTimeEntriesTool');
+  expect(mod).not.toHaveProperty('listTimeEntresTool');
+});
