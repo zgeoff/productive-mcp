@@ -23,7 +23,7 @@ An MCP (Model Context Protocol) server that enables Claude Code and other MCP-co
 
 ## Installation
 
-Requires **Node.js 20+** (enforced via `.npmrc`).
+Requires **[Bun](https://bun.sh) 1.3+** for development and **Node.js 20+** at runtime (the built artifact runs under plain Node).
 
 1. Clone this repository:
    ```bash
@@ -32,11 +32,11 @@ Requires **Node.js 20+** (enforced via `.npmrc`).
    ```
 2. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 3. Build:
    ```bash
-   npm run build
+   bun run build
    ```
 
 The built entrypoint is `build/index.js`. Note the absolute path — you'll reference it when configuring your MCP client.
@@ -310,9 +310,11 @@ When `PRODUCTIVE_USER_ID` is configured, you can use "me" in several tools:
 
 ## Development
 
-- Run in development mode: `npm run dev`
-- Build: `npm run build`
-- Start built server: `npm start`
+- Run in development mode: `bun run dev` (runs `src/index.ts` directly via Bun, reloads on change)
+- Build: `bun run build` (emits `build/` via `tsc`)
+- Run tests: `bun test`
+- Typecheck without emit: `bun run typecheck`
+- Start the built server under Node: `bun run start`
 
 ## License
 

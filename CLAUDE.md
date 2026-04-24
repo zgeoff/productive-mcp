@@ -10,8 +10,8 @@ A Node.js stdio MCP server that exposes the Productive.io REST API as MCP tools 
 
 - TypeScript (strict, `module: Node16`, ES2022) compiled to `build/`
 - Runtime: `@modelcontextprotocol/sdk`, `zod`, `dotenv` — exact-pinned in `package.json`
-- No tests, no linter, no bundler
-- Node `>=20` (enforced by `.npmrc` `engine-strict=true`)
+- **Bun** for dev, install, and test. `tsc` still owns the `build/` output that consumers run under Node 20+.
+- No linter, no bundler
 
 ## Layout
 
@@ -40,17 +40,17 @@ This is a **stdio** MCP server: stdout is reserved for JSON-RPC framing. Anythin
 ## Commands
 
 ```bash
-npm install          # uses exact pins via .npmrc
-npm run build        # tsc + chmod +x build/index.js
-npm run dev          # tsc --watch
-npm start            # node build/index.js (needs env vars set)
+bun install          # exact pins via bunfig.toml
+bun run build        # tsc + chmod +x build/index.js
+bun run dev          # bun --watch runs src/index.ts directly (needs env set)
+bun run typecheck    # tsc --noEmit
+bun test             # runs bun test (co-located *.test.ts files)
+bun run start        # runs build/index.js under Node
 ```
-
-No test runner is configured.
 
 ## Conventions
 
 - Validate all external data (env, tool args) with zod at the boundary
 - File naming: kebab-case
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, …)
-- Exact-pin any new dependency (the `.npmrc` default will do this automatically)
+- Exact-pin any new dependency (`bunfig.toml` default will do this automatically)
