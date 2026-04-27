@@ -33,6 +33,7 @@ import {
   ProductivePageUpdate,
   ProductiveTaskDependency,
   ProductiveTaskDependencyCreate,
+  ProductiveCustomField,
   ProductiveError
 } from './types.js';
 
@@ -1102,5 +1103,29 @@ export class ProductiveAPIClient {
 
   async deleteTaskDependency(dependencyId: string): Promise<void> {
     return this.makeVoidRequest(`task_dependencies/${dependencyId}`, { method: 'DELETE' });
+  }
+
+  // ---- Custom Field methods ----
+
+  async listCustomFields(params?: {
+    customizable_type?: string;
+    project_id?: string;
+    archived?: boolean;
+    name?: string;
+    limit?: number;
+    page?: number;
+  }): Promise<ProductiveResponse<ProductiveCustomField>> {
+    const q = new URLSearchParams();
+    // Side-load options so the agent can resolve select/multi-select values
+    // in a single round-trip.
+    q.append('include', 'custom_field_options');
+    if (params?.customizable_type) q.append('filter[customizable_type]', params.customizable_type);
+    if (params?.project_id) q.append('filter[project_id]', params.project_id);
+    if (params?.archived !== undefined) q.append('filter[archived]', params.archived.toString());
+    if (params?.name) q.append('filter[name]', params.name);
+    if (params?.limit) q.append('page[size]', params.limit.toString());
+    if (params?.page) q.append('page[number]', params.page.toString());
+    const qs = q.toString();
+    return this.makeRequest<ProductiveResponse<ProductiveCustomField>>(`custom_fields${qs ? `?${qs}` : ''}`);
   }
 }

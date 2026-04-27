@@ -7,7 +7,8 @@ const { version: pkgVersion } = createRequire(import.meta.url)('../package.json'
 import { getConfig } from './config/index.js';
 import { ProductiveAPIClient } from './api/client.js';
 import { listProjectsTool, listProjectsDefinition } from './tools/projects.js';
-import { listTasksTool, getProjectTasksTool, getTaskTool, createTaskTool, updateTaskAssignmentTool, updateTaskDetailsTool, deleteTaskTool, listTasksDefinition, getProjectTasksDefinition, getTaskDefinition, createTaskDefinition, updateTaskAssignmentDefinition, updateTaskDetailsDefinition, deleteTaskDefinition } from './tools/tasks.js';
+import { listTasksTool, getProjectTasksTool, getTaskTool, createTaskTool, updateTaskAssignmentTool, updateTaskDetailsTool, updateTaskCustomFieldsTool, deleteTaskTool, listTasksDefinition, getProjectTasksDefinition, getTaskDefinition, createTaskDefinition, updateTaskAssignmentDefinition, updateTaskDetailsDefinition, updateTaskCustomFieldsDefinition, deleteTaskDefinition } from './tools/tasks.js';
+import { listCustomFieldsTool, listCustomFieldsDefinition } from './tools/custom-fields.js';
 import { listCompaniesTool, listCompaniesDefinition } from './tools/companies.js';
 import { myTasksTool, myTasksDefinition } from './tools/my-tasks.js';
 import { listBoards, createBoard, listBoardsTool, createBoardTool } from './tools/boards.js';
@@ -73,6 +74,8 @@ export async function createServer() {
       createTaskDefinition,
       updateTaskAssignmentDefinition,
       updateTaskDetailsDefinition,
+      updateTaskCustomFieldsDefinition,
+      listCustomFieldsDefinition,
       addTaskCommentDefinition,
       updateTaskStatusDefinition,
       listWorkflowStatusesDefinition,
@@ -168,6 +171,12 @@ export async function createServer() {
         
       case 'update_task_details':
         return await updateTaskDetailsTool(apiClient, args);
+
+      case 'update_task_custom_fields':
+        return await updateTaskCustomFieldsTool(apiClient, args);
+
+      case 'list_custom_fields':
+        return await listCustomFieldsTool(apiClient, args);
         
       case 'add_task_comment':
         return await addTaskCommentTool(apiClient, args);

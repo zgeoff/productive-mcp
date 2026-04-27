@@ -6,7 +6,7 @@ import type {
   ProductiveSingleResponse,
   ProductiveTask,
 } from '../api/types.js';
-import { getProjectTasksTool, getTaskTool, listTasksTool } from './tasks.js';
+import { createTaskTool, getProjectTasksTool, getTaskTool, listTasksTool, updateTaskCustomFieldsTool } from './tasks.js';
 
 type ListTasksParams = Parameters<ProductiveAPIClient['listTasks']>[0];
 
@@ -240,4 +240,76 @@ test('listTasksTool rejects combining unassigned with assignee_id', async () => 
   expect(
     listTasksTool(client, { unassigned: true, assignee_id: 'p-1' })
   ).rejects.toThrow(/Cannot combine unassigned=true with assignee_id/);
+});
+
+test('createTaskTool forwards custom_fields into the API attributes', async () => {
+  const calls: any[] = [];
+  const client = {
+    createTask: async (data: any) => {
+      calls.push(data);
+      return { data: buildTask({ title: 'Created' }) };
+    },
+  } as unknown as ProductiveAPIClient;
+
+  await createTaskTool(client, {
+    title: 'Created',
+    custom_fields: { '307': '5821', '156': 'PROJ-42' },
+  });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0].data.attributes.custom_fields).toEqual({ '307': '5821', '156': 'PROJ-42' });
+});
+
+test('createTaskTool omits custom_fields when not provided', async () => {
+  const calls: any[] = [];
+  const client = {
+    createTask: async (data: any) => {
+      calls.push(data);
+      return { data: buildTask({ title: 'Created' }) };
+    },
+  } as unknown as ProductiveAPIClient;
+
+  await createTaskTool(client, { title: 'Created' });
+
+  expect(calls[0].data.attributes.custom_fields).toBeUndefined();
+});
+
+test('updateTaskCustomFieldsTool sends a PATCH with the provided custom_fields map', async () => {
+  const calls: any[] = [];
+  const client = {
+    updateTask: async (taskId: string, data: any) => {
+      calls.push({ taskId, data });
+      return { data: buildTask({ title: 'Patched', custom_fields: { '307': '5821' } as any }) };
+    },
+  } as unknown as ProductiveAPIClient;
+
+  const result = await updateTaskCustomFieldsTool(client, {
+    task_id: 't-1',
+    custom_fields: { '307': '5821' },
+  });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0].taskId).toBe('t-1');
+  expect(calls[0].data.data.attributes.custom_fields).toEqual({ '307': '5821' });
+  expect(result.content[0].text).toContain('307: "5821"');
+});
+
+test('updateTaskCustomFieldsTool rejects an empty custom_fields map', async () => {
+  const client = {} as unknown as ProductiveAPIClient;
+
+  expect(
+    updateTaskCustomFieldsTool(client, { task_id: 't-1', custom_fields: {} })
+  ).rejects.toThrow(/at least one key/);
+});
+
+test('getTaskTool surfaces custom_fields when present', async () => {
+  const task = buildTask({ custom_fields: { '307': '5821', '156': 'PROJ-42' } as any });
+  const { client } = mockClient({ data: task });
+
+  const result = await getTaskTool(client, { task_id: 't-1' });
+  const text = result.content[0].text;
+
+  expect(text).toContain('Custom Fields');
+  expect(text).toContain('307: "5821"');
+  expect(text).toContain('156: "PROJ-42"');
 });

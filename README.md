@@ -168,9 +168,11 @@ If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`
 | `list_tasks` | List tasks. Filter by `project_id`, `assignee_id`, `task_list_id`, `unassigned` (bool), `status` (open/closed), `limit`, `page` |
 | `get_project_tasks` | Get all tasks for a project. Requires `project_id`, optional `status`, `page` |
 | `get_task` | Get task details by `task_id` |
-| `create_task` | Create a task. Requires `title`. Optional `project_id`, `board_id`, `task_list_id`, `assignee_id` ("me" supported), `due_date`, `status` |
+| `create_task` | Create a task. Requires `title`. Optional `project_id`, `board_id`, `task_list_id`, `assignee_id` ("me" supported), `due_date`, `status`, `custom_fields` |
 | `update_task_assignment` | Assign/unassign a task. Requires `task_id`, `assignee_id` ("me" or "null" supported) |
 | `update_task_details` | Update title/description. Requires `task_id`, optional `title`, `description`, `description_html` |
+| `update_task_custom_fields` | Set custom field values on a task. Requires `task_id` and `custom_fields` (map of field-id → value). Only listed keys change. |
+| `list_custom_fields` | Discover custom fields and their option IDs. Defaults to `customizable_type=tasks`. Optional `project_id`, `name`, `archived`, `limit`, `page`. |
 | `update_task_status` | Set workflow status by name or ID. Requires `task_id` and either `status_name` (e.g. "In Progress", "On Hold") or `workflow_status_id`. Automatically resolves the task's project workflow, supports custom statuses |
 | `delete_task` | Delete a task by `task_id` |
 | `my_tasks` | Get tasks assigned to you. Optional `status`, `limit` |

@@ -252,6 +252,14 @@ export async function getTaskTool(
       }
     }
 
+    const customFields = task.attributes.custom_fields;
+    if (customFields && Object.keys(customFields).length > 0) {
+      text += `Custom Fields (resolve names with list_custom_fields):\n`;
+      for (const [fieldId, value] of Object.entries(customFields)) {
+        text += `  ${fieldId}: ${JSON.stringify(value)}\n`;
+      }
+    }
+
     return {
       content: [{
         type: 'text',
@@ -366,6 +374,7 @@ const createTaskSchema = z.object({
   assignee_id: z.string().optional(),
   due_date: z.string().optional(),
   status: z.enum(['open', 'closed']).optional().default('open'),
+  custom_fields: z.record(z.unknown()).optional(),
 });
 
 export async function createTaskTool(
@@ -399,6 +408,7 @@ export async function createTaskTool(
           description: descriptionValue,
           due_date: params.due_date,
           status: params.status === 'open' ? 1 : 2,
+          ...(params.custom_fields ? { custom_fields: params.custom_fields } : {}),
         },
         relationships: {} as any,
       },
@@ -535,6 +545,11 @@ export const createTaskDefinition = {
         type: 'string',
         enum: ['open', 'closed'],
         description: 'Task status (default: open)',
+      },
+      custom_fields: {
+        type: 'object',
+        description: 'Custom field values, keyed by custom-field ID. Use list_custom_fields (customizable_type=tasks) to discover field IDs and option IDs. Value formats: text → string, number → number, select → option ID as string, multi-select → array of option ID strings, date → ISO date string, person → person ID as string.',
+        additionalProperties: true,
       },
     },
     required: ['title'],
@@ -801,5 +816,84 @@ export const deleteTaskDefinition = {
       },
     },
     required: ['task_id'],
+  },
+};
+
+const updateTaskCustomFieldsSchema = z.object({
+  task_id: z.string().min(1, 'Task ID is required'),
+  custom_fields: z.record(z.unknown()).refine(
+    (v) => Object.keys(v).length > 0,
+    { message: 'custom_fields must contain at least one key' }
+  ),
+});
+
+export async function updateTaskCustomFieldsTool(
+  client: ProductiveAPIClient,
+  args: unknown
+): Promise<{ content: Array<{ type: string; text: string }> }> {
+  try {
+    const params = updateTaskCustomFieldsSchema.parse(args);
+
+    const taskUpdate: ProductiveTaskUpdate = {
+      data: {
+        type: 'tasks',
+        id: params.task_id,
+        attributes: {
+          custom_fields: params.custom_fields,
+        },
+      },
+    };
+
+    const response = await client.updateTask(params.task_id, taskUpdate);
+
+    const updatedFields = response.data.attributes.custom_fields ?? {};
+    const lines = Object.entries(params.custom_fields).map(([fieldId, requested]) => {
+      const after = (updatedFields as Record<string, unknown>)[fieldId];
+      const formatted = JSON.stringify(after ?? requested);
+      return `  ${fieldId}: ${formatted}`;
+    });
+
+    let text = `Task custom fields updated.\n`;
+    text += `Task: ${response.data.attributes.title} (ID: ${response.data.id})\n`;
+    text += `Updated:\n${lines.join('\n')}`;
+
+    return {
+      content: [{
+        type: 'text',
+        text,
+      }],
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid parameters: ${error.errors.map(e => e.message).join(', ')}`
+      );
+    }
+
+    throw new McpError(
+      ErrorCode.InternalError,
+      error instanceof Error ? error.message : 'Unknown error occurred'
+    );
+  }
+}
+
+export const updateTaskCustomFieldsDefinition = {
+  name: 'update_task_custom_fields',
+  description: 'Set custom field values on a task. Only the keys you pass are changed; other custom fields are left untouched. Discover field IDs and option IDs with list_custom_fields. Value formats: text → string, number → number, select → option ID as string, multi-select → array of option ID strings, date → ISO date string, person → person ID as string.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      task_id: {
+        type: 'string',
+        description: 'ID of the task to update (required)',
+      },
+      custom_fields: {
+        type: 'object',
+        description: 'Map of custom-field ID → value. At least one key required. Example: {"307": "5821"} sets the field with ID 307 to the option whose ID is 5821.',
+        additionalProperties: true,
+      },
+    },
+    required: ['task_id', 'custom_fields'],
   },
 };

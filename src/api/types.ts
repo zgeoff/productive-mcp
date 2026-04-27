@@ -138,6 +138,7 @@ export interface ProductiveTaskCreate {
       description?: string;
       due_date?: string;
       status?: number;
+      custom_fields?: Record<string, unknown>;
     };
     relationships?: {
       project?: {
@@ -696,6 +697,47 @@ export interface ProductiveTaskDependency {
     task?: { data: { id: string; type: 'tasks' } };
     dependent_task?: { data: { id: string; type: 'tasks' } };
     reverse_dependency?: { data: { id: string; type: 'task_dependencies' } };
+    [key: string]: unknown;
+  };
+}
+
+// ---- Custom Field types ----
+
+// data_type_id values: 1=text, 2=number, 3=select, 4=date, 5=multi-select,
+// 6=person, 7=attachment. customizable_type names the resource the field
+// attaches to (e.g. "tasks", "deals", "projects").
+export interface ProductiveCustomField {
+  id: string;
+  type: 'custom_fields';
+  attributes: {
+    name: string;
+    data_type_id: number;
+    customizable_type: string;
+    description?: string | null;
+    required?: boolean;
+    archived_at?: string | null;
+    position?: number;
+    [key: string]: unknown;
+  };
+  relationships?: {
+    project?: { data: { id: string; type: 'projects' } | null };
+    custom_field_options?: { data: Array<{ id: string; type: 'custom_field_options' }> };
+    [key: string]: unknown;
+  };
+}
+
+export interface ProductiveCustomFieldOption {
+  id: string;
+  type: 'custom_field_options';
+  attributes: {
+    name: string;
+    position?: number;
+    color_id?: number | null;
+    archived_at?: string | null;
+    [key: string]: unknown;
+  };
+  relationships?: {
+    custom_field?: { data: { id: string; type: 'custom_fields' } };
     [key: string]: unknown;
   };
 }
