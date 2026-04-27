@@ -165,8 +165,8 @@ If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`
 
 | Tool | Description |
 |------|-------------|
-| `list_tasks` | List tasks. Filter by `project_id`, `assignee_id`, `status` (open/closed), `limit` |
-| `get_project_tasks` | Get all tasks for a project. Requires `project_id`, optional `status` |
+| `list_tasks` | List tasks. Filter by `project_id`, `assignee_id`, `task_list_id`, `unassigned` (bool), `status` (open/closed), `limit`, `page` |
+| `get_project_tasks` | Get all tasks for a project. Requires `project_id`, optional `status`, `page` |
 | `get_task` | Get task details by `task_id` |
 | `create_task` | Create a task. Requires `title`. Optional `project_id`, `board_id`, `task_list_id`, `assignee_id` ("me" supported), `due_date`, `status` |
 | `update_task_assignment` | Assign/unassign a task. Requires `task_id`, `assignee_id` ("me" or "null" supported) |
