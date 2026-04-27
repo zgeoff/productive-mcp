@@ -8,6 +8,7 @@ import { resolveWorkflowStatus } from '../resolvers/resolve-workflow-status.js';
 const listTasksSchema = z.object({
   project_id: z.string().optional(),
   assignee_id: z.string().optional(),
+  task_list_id: z.string().optional(),
   status: z.enum(['open', 'closed']).optional(),
   limit: z.number().min(1).max(200).default(30).optional(),
   page: z.number().min(1).optional(),
@@ -33,6 +34,7 @@ export async function listTasksTool(
     const response = await client.listTasks({
       project_id: params.project_id,
       assignee_id: params.assignee_id,
+      task_list_id: params.task_list_id,
       status: params.status,
       limit: params.limit,
       page: params.page,
@@ -279,6 +281,10 @@ export const listTasksDefinition = {
       assignee_id: {
         type: 'string',
         description: 'Filter tasks by assignee ID',
+      },
+      task_list_id: {
+        type: 'string',
+        description: 'Filter tasks by task list ID',
       },
       status: {
         type: 'string',

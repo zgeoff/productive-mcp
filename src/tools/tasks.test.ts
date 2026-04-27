@@ -207,3 +207,20 @@ test('getProjectTasksTool omits page when not provided', async () => {
 
   expect(calls[0]?.page).toBeUndefined();
 });
+
+test('listTasksTool forwards task_list_id filter to the API client', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await listTasksTool(client, { task_list_id: '1678330' });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.task_list_id).toBe('1678330');
+});
+
+test('listTasksTool omits task_list_id when not provided', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await listTasksTool(client, {});
+
+  expect(calls[0]?.task_list_id).toBeUndefined();
+});
