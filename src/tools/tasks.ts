@@ -10,11 +10,13 @@ const listTasksSchema = z.object({
   assignee_id: z.string().optional(),
   status: z.enum(['open', 'closed']).optional(),
   limit: z.number().min(1).max(200).default(30).optional(),
+  page: z.number().min(1).optional(),
 });
 
 const getProjectTasksSchema = z.object({
   project_id: z.string().min(1, 'Project ID is required'),
   status: z.enum(['open', 'closed']).optional(),
+  page: z.number().min(1).optional(),
 });
 
 const getTaskSchema = z.object({
@@ -33,6 +35,7 @@ export async function listTasksTool(
       assignee_id: params.assignee_id,
       status: params.status,
       limit: params.limit,
+      page: params.page,
     });
     
     if (!response || !response.data || response.data.length === 0) {
@@ -96,6 +99,7 @@ export async function getProjectTasksTool(
       project_id: params.project_id,
       status: params.status,
       limit: 200, // Get maximum tasks for a project
+      page: params.page,
     });
     
     if (!response || !response.data || response.data.length === 0) {
@@ -288,6 +292,11 @@ export const listTasksDefinition = {
         maximum: 200,
         default: 30,
       },
+      page: {
+        type: 'number',
+        description: 'Page number for pagination (default: 1)',
+        minimum: 1,
+      },
     },
   },
 };
@@ -306,6 +315,11 @@ export const getProjectTasksDefinition = {
         type: 'string',
         enum: ['open', 'closed'],
         description: 'Filter by task status (open or closed)',
+      },
+      page: {
+        type: 'number',
+        description: 'Page number for pagination (default: 1)',
+        minimum: 1,
       },
     },
     required: ['project_id'],

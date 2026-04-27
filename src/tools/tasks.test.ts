@@ -2,10 +2,26 @@ import { expect, test } from 'bun:test';
 import type { ProductiveAPIClient } from '../api/client.js';
 import type {
   ProductiveIncludedResource,
+  ProductiveResponse,
   ProductiveSingleResponse,
   ProductiveTask,
 } from '../api/types.js';
-import { getTaskTool } from './tasks.js';
+import { getProjectTasksTool, getTaskTool, listTasksTool } from './tasks.js';
+
+type ListTasksParams = Parameters<ProductiveAPIClient['listTasks']>[0];
+
+function mockListClient(
+  response: ProductiveResponse<ProductiveTask>
+): { client: ProductiveAPIClient; calls: ListTasksParams[] } {
+  const calls: ListTasksParams[] = [];
+  const client = {
+    listTasks: async (params?: ListTasksParams) => {
+      calls.push(params);
+      return response;
+    },
+  } as unknown as ProductiveAPIClient;
+  return { client, calls };
+}
 
 function mockClient(
   response: ProductiveSingleResponse<ProductiveTask>
@@ -149,4 +165,45 @@ test('getTaskTool throws McpError with InvalidParams when task_id is missing', a
   const { client } = mockClient({ data: buildTask() });
 
   expect(getTaskTool(client, {})).rejects.toThrow(/Invalid parameters/);
+});
+
+test('listTasksTool forwards page param to the API client', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await listTasksTool(client, { page: 3 });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.page).toBe(3);
+});
+
+test('listTasksTool omits page when not provided', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await listTasksTool(client, {});
+
+  expect(calls[0]?.page).toBeUndefined();
+});
+
+test('listTasksTool rejects page values below 1', async () => {
+  const { client } = mockListClient({ data: [buildTask()] });
+
+  expect(listTasksTool(client, { page: 0 })).rejects.toThrow(/Invalid parameters/);
+});
+
+test('getProjectTasksTool forwards page param to the API client', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await getProjectTasksTool(client, { project_id: 'p-1', page: 2 });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.page).toBe(2);
+  expect(calls[0]?.project_id).toBe('p-1');
+});
+
+test('getProjectTasksTool omits page when not provided', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await getProjectTasksTool(client, { project_id: 'p-1' });
+
+  expect(calls[0]?.page).toBeUndefined();
 });
