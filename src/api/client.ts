@@ -160,6 +160,7 @@ export class ProductiveAPIClient {
     project_id?: string;
     assignee_id?: string;
     task_list_id?: string;
+    unassigned?: boolean;
     status?: 'open' | 'closed';
     limit?: number;
     page?: number;
@@ -173,7 +174,12 @@ export class ProductiveAPIClient {
       queryParams.append('filter[project_id]', params.project_id);
     }
 
-    if (params?.assignee_id) {
+    // The Productive API accepts an empty-value filter[assignee_id][eq]= as
+    // "tasks without an assignee". There is no documented null/exists operator,
+    // so this empty-value form is the only way to filter for unassigned tasks.
+    if (params?.unassigned) {
+      queryParams.append('filter[assignee_id][eq]', '');
+    } else if (params?.assignee_id) {
       queryParams.append('filter[assignee_id]', params.assignee_id);
     }
 

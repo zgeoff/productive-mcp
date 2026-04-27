@@ -224,3 +224,20 @@ test('listTasksTool omits task_list_id when not provided', async () => {
 
   expect(calls[0]?.task_list_id).toBeUndefined();
 });
+
+test('listTasksTool forwards unassigned=true to the API client', async () => {
+  const { client, calls } = mockListClient({ data: [buildTask()] });
+
+  await listTasksTool(client, { unassigned: true });
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.unassigned).toBe(true);
+});
+
+test('listTasksTool rejects combining unassigned with assignee_id', async () => {
+  const { client } = mockListClient({ data: [buildTask()] });
+
+  expect(
+    listTasksTool(client, { unassigned: true, assignee_id: 'p-1' })
+  ).rejects.toThrow(/Cannot combine unassigned=true with assignee_id/);
+});

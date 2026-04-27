@@ -9,10 +9,14 @@ const listTasksSchema = z.object({
   project_id: z.string().optional(),
   assignee_id: z.string().optional(),
   task_list_id: z.string().optional(),
+  unassigned: z.boolean().optional(),
   status: z.enum(['open', 'closed']).optional(),
   limit: z.number().min(1).max(200).default(30).optional(),
   page: z.number().min(1).optional(),
-});
+}).refine(
+  (data) => !(data.unassigned === true && data.assignee_id !== undefined),
+  { message: 'Cannot combine unassigned=true with assignee_id', path: ['unassigned'] }
+);
 
 const getProjectTasksSchema = z.object({
   project_id: z.string().min(1, 'Project ID is required'),
@@ -35,6 +39,7 @@ export async function listTasksTool(
       project_id: params.project_id,
       assignee_id: params.assignee_id,
       task_list_id: params.task_list_id,
+      unassigned: params.unassigned,
       status: params.status,
       limit: params.limit,
       page: params.page,
@@ -285,6 +290,10 @@ export const listTasksDefinition = {
       task_list_id: {
         type: 'string',
         description: 'Filter tasks by task list ID',
+      },
+      unassigned: {
+        type: 'boolean',
+        description: 'When true, return only tasks with no assignee. Cannot be combined with assignee_id.',
       },
       status: {
         type: 'string',
