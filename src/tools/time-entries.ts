@@ -78,7 +78,7 @@ const createTimeEntrySchema = z.object({
   person_id: z.string().min(1, 'Person ID is required'),
   service_id: z.string().min(1, 'Service ID is required'),
   task_id: z.string().optional().describe('Optional task ID - use list_project_tasks to find available tasks for the project'),
-  note: z.string().min(10, 'Work description must be at least 10 characters').describe('REQUIRED: Detailed description of work performed - be specific about what was accomplished, including bullet points if multiple items'),
+  note: z.string().optional().describe('Optional description of work performed - if provided, be specific about what was accomplished, including bullet points if multiple items'),
   billable_time: z.string().optional(),
   confirm: z.boolean().optional().default(false),
 });
@@ -478,7 +478,7 @@ export const listTimeEntriesDefinition = {
 
 export const createTimeEntryDefinition = {
   name: 'create_time_entry',
-  description: 'STEP 5 (FINAL) of timesheet workflow: Create a time entry with detailed work description. COMPLETE WORKFLOW: 1) list_projects → 2) list_project_deals → 3) list_deal_services → 4) list_project_tasks (recommended) → 5) create_time_entry. You MUST provide: valid service_id from the hierarchy, detailed work notes (minimum 10 chars), and optionally link to a specific task_id. This tool requires confirmation before creating. If PRODUCTIVE_USER_ID is configured, use "me" for person_id.',
+  description: 'STEP 5 (FINAL) of timesheet workflow: Create a time entry, optionally with a work description. COMPLETE WORKFLOW: 1) list_projects → 2) list_project_deals → 3) list_deal_services → 4) list_project_tasks (recommended) → 5) create_time_entry. You MUST provide: valid service_id from the hierarchy, and optionally link to a specific task_id. A note describing the work is optional but encouraged when meaningful context exists. This tool requires confirmation before creating. If PRODUCTIVE_USER_ID is configured, use "me" for person_id.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -504,8 +504,7 @@ export const createTimeEntryDefinition = {
       },
       note: {
         type: 'string',
-        description: 'REQUIRED: Detailed description of work performed - be specific about what was accomplished, include bullet points if multiple items (minimum 10 characters)',
-        minLength: 10,
+        description: 'Optional description of work performed - if provided, be specific about what was accomplished, include bullet points if multiple items',
       },
       billable_time: {
         type: 'string',
@@ -517,7 +516,7 @@ export const createTimeEntryDefinition = {
         default: false,
       },
     },
-    required: ['date', 'time', 'person_id', 'service_id', 'note'],
+    required: ['date', 'time', 'person_id', 'service_id'],
   },
 };
 
