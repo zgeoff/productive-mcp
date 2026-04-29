@@ -4,105 +4,41 @@ An MCP (Model Context Protocol) server that enables Claude Code and other MCP-co
 
 > **Fork notice:** This is a fork of [berwickgeek/productive-mcp](https://github.com/berwickgeek/productive-mcp). It is **not published to npm** — install by building from source (see below).
 
-## Features
+## Quick start
 
-- **Companies & Projects**: List companies and projects with status filtering
-- **Folders**: Full CRUD with archive/restore for organizing project content
-- **Task Lists**: Full lifecycle management — create, update, archive/restore, copy, move, reposition
-- **Task Management**: List, create, update, delete tasks with various filters
-- **Subtasks**: Create and list subtasks under parent tasks
-- **Task Operations**: Comments, status updates, sprint assignment, repositioning
-- **Comments**: Full CRUD with pin/unpin and reactions
-- **Todos**: Checklist items on tasks — create, update, close/reopen, delete
-- **Pages/Docs**: Full document management with nested page hierarchies, move, and copy
-- **People Management**: List people in your organization with filtering options
-- **Workflow Management**: List and work with workflow statuses for proper task status updates
-- **Time Tracking**: List and create time entries with service/deal integration
-- **User Context**: Supports "me" references when PRODUCTIVE_USER_ID is configured
-- **Activity Tracking**: View activities and recent updates across your organization
+```bash
+git clone https://github.com/zgeoff/productive-mcp.git
+cd productive-mcp && bun install && bun run build
+```
 
-## Installation
+Requires **[Bun](https://bun.sh) 1.3+** to build, **Node.js 20+** at runtime. The built entrypoint is `build/index.js` — note the absolute path, you'll reference it in your MCP client config.
 
-Requires **[Bun](https://bun.sh) 1.3+** for development and **Node.js 20+** at runtime (the built artifact runs under plain Node).
+Then:
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/zgeoff/productive-mcp.git
-   cd productive-mcp
-   ```
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
-3. Build:
-   ```bash
-   bun run build
-   ```
+1. Grab credentials (below).
+2. Configure your MCP client (Claude Code / Cursor sections below).
+3. Verify by calling the `whoami` tool. Success looks like: `Current user: Your Name (ID: 1027601, Email: you@example.com)`.
 
-The built entrypoint is `build/index.js`. Note the absolute path — you'll reference it when configuring your MCP client.
+## Credentials
 
-## Configuration
+In Productive, go to **Settings → API integrations** and generate a token. Pick **read-only** unless you need to create/edit (tasks, comments, time entries). The Organization ID is shown on the same page.
 
-### Getting Your Credentials
+Your User ID isn't on the API integrations page — click your name in the top-right of the UI to open your profile, then grab the trailing number from the URL (e.g. `https://app.productive.io/16152-pipelabs/settings/person/1027601` → `1027601`).
 
-To obtain your Productive.io credentials:
-1. Log in to Productive.io
-2. Go to Settings → API integrations
-3. Generate a new token (choose read-only for safety, or full access for task creation)
-4. Copy the token and organization ID
+| Variable | Required | Notes |
+|---|---|---|
+| `PRODUCTIVE_API_TOKEN` | Yes | From Settings → API integrations |
+| `PRODUCTIVE_ORG_ID` | Yes | Shown alongside the token |
+| `PRODUCTIVE_USER_ID` | No | Enables `my_tasks` and "me" references |
 
-To find your user ID:
-- You can use the API to list people and find your ID
-- Or check the URL when viewing your profile in Productive.io
+## MCP client setup
 
-### Environment Variables
+Both clients use the same config shape — only the file path differs.
 
-The server requires the following environment variables:
+### Claude Code
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `PRODUCTIVE_API_TOKEN` | Yes | Your Productive.io API token |
-| `PRODUCTIVE_ORG_ID` | Yes | Your organization ID |
-| `PRODUCTIVE_USER_ID` | No | Your user ID (required for `my_tasks` tool) |
+`.mcp.json` at the repo root (a `.mcp.json.example` ships as a starting point):
 
-## Usage with Claude Code
-
-This repo ships a `.mcp.json.example` at the root. The recommended setup uses project-level MCP config plus a local `.env` for secrets:
-
-1. **Build the server** (emits `build/index.js`):
-   ```bash
-   bun install
-   bun run build
-   ```
-
-2. **Create `.env`** at the repo root (gitignored):
-   ```bash
-   PRODUCTIVE_API_TOKEN=your_api_token_here
-   PRODUCTIVE_ORG_ID=your_organization_id_here
-   PRODUCTIVE_USER_ID=your_user_id_here   # optional, required for my_tasks
-   ```
-   The server loads `.env` relative to the built module, so it works regardless of where Claude Code spawns the process.
-
-3. **Create `.mcp.json`** at the repo root (also gitignored — contains an absolute path):
-   ```bash
-   cp .mcp.json.example .mcp.json
-   # edit .mcp.json to replace /ABSOLUTE/PATH/TO with your real path
-   ```
-   The config is minimal — no `env` block needed, since dotenv handles secrets:
-   ```json
-   {
-     "mcpServers": {
-       "productive": {
-         "command": "node",
-         "args": ["/absolute/path/to/productive-mcp/build/index.js"]
-       }
-     }
-   }
-   ```
-
-4. **Launch Claude Code from the repo root** — it'll pick up `.mcp.json` automatically.
-
-If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -118,6 +54,16 @@ If you'd rather not use `.env`, you can still set env vars inline in `.mcp.json`
   }
 }
 ```
+
+Launch Claude Code from the repo root.
+
+### Cursor
+
+`~/.cursor/mcp.json` (global) or `.cursor/mcp.json` in a project. Same JSON shape as above. Reload from **Cursor Settings → MCP**.
+
+### Using `.env` instead of inline env
+
+If you'd rather not put secrets in your client config, drop a `.env` next to `package.json` with the same three vars — the server loads it relative to the built module, so it works regardless of where the client spawns the process. Then omit the `env` block from the client config.
 
 ## Available Tools
 
